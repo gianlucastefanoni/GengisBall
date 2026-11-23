@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [master]
+    branches: [main, master]
   workflow_dispatch:
 
 permissions:
@@ -22,8 +22,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Controllo sintassi del gioco
-        run: node scripts/check.js
+          cache: npm
+      - run: npm ci
+      - name: Build e controllo del gioco
+        run: npm run build
 
   deploy:
     needs: check
@@ -33,12 +35,14 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
       - uses: actions/configure-pages@v5
-      - name: Prepara la cartella da pubblicare
-        run: |
-          mkdir dist
-          cp index.html dist/
-          touch dist/.nojekyll
+      - name: Build app React e Phaser
+        run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
